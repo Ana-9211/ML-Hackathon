@@ -27,7 +27,7 @@ from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 
 from . import maps
-from .geo import haversine_m
+from .geo import LocalProjection, haversine_m
 from .labels import route_quality
 from .loader import DATA_DIR, list_trips, load_route, load_trip
 from .network import RoadNetwork
@@ -206,6 +206,47 @@ def folium_maps(summary: pd.DataFrame):
         maps.finish(m, OUT / f"map_trip_{tid}.html")
 
 
+def projection_error() -> dict:
+    """Projected distance vs haversine between the two most distant-ish points of each trip."""
+    errs = []
+    for part in PARTS:
+        for tid in list_trips(part):
+            trip = load_trip(part, tid)
+            proj = LocalProjection.for_points(trip.lon, trip.lat)
+            x, y = proj.to_xy(trip.lon, trip.lat)
+            i, j = np.argmin(x + y), np.argmax(x + y)
+            h = haversine_m(trip.lon[i], trip.lat[i], trip.lon[j], trip.lat[j])
+            if h > 0:
+                errs.append(abs(np.hypot(x[i] - x[j], y[i] - y[j]) - h) / h)
+    return {"projection_rel_error_max_pct": 100 * float(np.max(errs)),
+            "projection_rel_error_median_pct": 100 * float(np.median(errs))}
+
+
+def extra_checks(summary: pd.DataFrame, feats: pd.DataFrame) -> dict:
+    rel = feats[feats["label_reliable"] == 1]
+    n_pts = rel.groupby(["trip_id", "point_idx"]).ngroups
+    nearest = rel.sort_values(["trip_id", "point_idx", "dist", "arc_id"]).groupby(["trip_id", "point_idx"]).head(1)
+    pts = feats.groupby(["trip_id", "point_idx"]).agg(speed=("speed", "first"), hv=("heading_valid", "first"))
+    in_lscc = summary["route_in_largest_strong"]
+    out = {
+        "extent_ew_km_median": float(summary["extent_ew_km"].median()),
+        "extent_ns_km_median": float(summary["extent_ns_km"].median()),
+        "extent_km_max": float(summary[["extent_ew_km", "extent_ns_km"]].max().max()),
+        "nearest_arc_top1_reliable": float(nearest["label"].mean()),
+        "true_arc_is_tied_nearest_reliable": float((rel["label"].eq(1) & rel["dist_rank"].eq(0)).sum() / n_pts),
+        "true_arc_two_way_share": float(rel.loc[rel["label"] == 1, "two_way"].mean()),
+        "speed_kmh_p10_p50_p90_p99": [float(v) for v in (pts["speed"] * 3.6).quantile([.1, .5, .9, .99])],
+        "near_stationary_share": float((pts["speed"] < 1).mean()),
+        "heading_invalid_share": float(1 - pts["hv"].mean()),
+        "gaps_over_10s_total": int(summary["gaps_over_10s"].sum()),
+        "trips_full_route_in_largest_scc": int((in_lscc >= 0.999).sum()),
+        "route_in_largest_scc_min": float(in_lscc.min()),
+        "trips_with_step_over_200kmh": int((summary["max_speed_kmh"] > 200).sum()),
+    }
+    out.update(projection_error())
+    return out
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     inv = file_inventory()
@@ -241,6 +282,7 @@ def main():
         "train_mean_candidates_per_point": float(pts["n_cand"].mean()),
         "train_positive_rate_rows": float(feats["label"].mean()),
     }
+    headline.update(extra_checks(summary, feats))
     (OUT / "eda_summary.json").write_text(json.dumps(headline, indent=2))
     print(json.dumps(headline, indent=2))
 
