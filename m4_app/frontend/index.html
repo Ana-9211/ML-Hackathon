@@ -55,8 +55,9 @@
         </div>
         <div class="metrics">
           <article class="metric"><div class="metric-label">Observations</div><strong id="observationsValue">—</strong><p>Raw GPS points</p></article>
-          <article class="metric"><div class="metric-label">Route accuracy*</div><strong id="accuracyValue">—</strong><p>Server-side sequence score</p></article>
-          <article class="metric"><div class="metric-label">Continuity</div><strong id="continuityValue">—</strong><p>Legal consecutive segment transitions</p></article>
+          <article class="metric"><div class="metric-label">Top-1 accuracy</div><strong id="top1Value">—</strong><p>GPS points matched to the correct road</p></article>
+          <article class="metric"><div class="metric-label">Route similarity</div><strong id="accuracyValue">—</strong><p>Ordered route vs reference</p></article>
+          <article class="metric"><div class="metric-label">Continuity</div><strong id="continuityValue">—</strong><p>Consecutive GPS points on connected roads</p></article>
           <article class="metric"><div class="metric-label">Route arcs</div><strong id="arcsValue">—</strong><p>Predicted ordered road segments</p></article>
         </div>
         <div class="info-box" id="statusMessage" role="status" aria-live="polite">Enter the API address and connect to begin.</div>

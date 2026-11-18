@@ -124,13 +124,14 @@ async function predict() {
     $('observationsValue').textContent = payload.observation_count.toLocaleString();
     const score = payload.evaluation;
     $('accuracyValue').textContent = score.available ? `${score.route_accuracy_percent}%` : 'N/A';
+    $('top1Value').textContent = score.available && score.top1_accuracy_percent != null ? `${score.top1_accuracy_percent}%` : 'N/A';
     $('continuityValue').textContent = `${payload.predicted_route.continuity_percent}%`;
     $('arcsValue').textContent = payload.predicted_route.ordered_arcs.length.toLocaleString();
     $('predictorLabel').textContent = `Predictor: ${payload.predictor} · Mode: ${payload.mode}`;
     drawRoute(payload);
     const quality = payload.predicted_route.continuity_percent;
     message(`Trip ${payload.trip_id}: inference complete. ${score.available
-      ? `Server-side sequence score: ${score.route_accuracy_percent}%.`
+      ? `Top-1 accuracy: ${score.top1_accuracy_percent ?? 'N/A'}% · route similarity: ${score.route_accuracy_percent}% (scored on Laptop 1).`
       : 'No reference route is available, so scoring was not performed.'}
       ${quality < 100 ? 'Some predicted road segments are not directly connected.' : 'Predicted route segments are continuous.'}`,
       score.available ? 'success' : '');
