@@ -44,7 +44,8 @@ def load_m2_models() -> dict:
       - mlp.pkl + scaler.pkl
     """
     rf_path = M2_MODELS_DIR / "random_forest.pkl"
-    hgb_path = M2_MODELS_DIR / "gradient_boosting.pkl"
+    tuned_hgb_path = M2_MODELS_DIR / "tuned_gradient_boosting.pkl"
+    hgb_path = tuned_hgb_path if tuned_hgb_path.is_file() else (M2_MODELS_DIR / "gradient_boosting.pkl")
     mlp_path = M2_MODELS_DIR / "mlp.pkl"
     scaler_path = M2_MODELS_DIR / "scaler.pkl"
 
