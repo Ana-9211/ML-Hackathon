@@ -1,0 +1,5 @@
+# Keep the large 63MB training OOF cache local; all inference & student_test artifacts are tracked
+artifacts/candidate_predictions_val_oof.parquet
+artifacts/candidate_predictions_train.parquet
+artifacts/*.joblib
+.DS_Store
