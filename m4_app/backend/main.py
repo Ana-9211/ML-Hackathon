@@ -122,7 +122,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Scoring is strictly after inference; only this function accesses .route.
         try:
             actual_route = load_reference_private(settings.data_dir, trip_id, len(trip.arcs))
-            evaluation = score_prediction(predictions, actual_route)
+            evaluation = score_prediction(predictions, actual_route, trip)
         except InvalidTrip as exc:
             raise HTTPException(status_code=500, detail=f"Private reference file is invalid: {exc}") from exc
         return {
