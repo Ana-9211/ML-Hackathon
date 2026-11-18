@@ -215,17 +215,25 @@ class EmpiricalPriors:
     def fit_from_training_df(cls, df_train: pd.DataFrame) -> "EmpiricalPriors":
         """
         Fits the empirical transition probability table directly from the ground-truth
-        reference alignments in the training feature table.
+        reference alignments in the training feature table, filtered to reliable labels
+        (label_reliable == 1) so off-network points do not bias low-speed stay priors.
         Takes ~0.2 seconds on all 80 training trips.
         """
-        # Take one row per (trip_id, point_idx) where label == 1 (or closest candidate to label_arc)
-        pos = df_train[df_train["label"] == 1].drop_duplicates(["trip_id", "point_idx"]).sort_values(["trip_id", "point_idx"])
+        mask = df_train["label"] == 1
+        if "label_reliable" in df_train.columns:
+            mask = mask & (df_train["label_reliable"] == 1)
+        pos = (
+            df_train[mask]
+            .drop_duplicates(["trip_id", "point_idx"])
+            .sort_values(["trip_id", "point_idx"])
+        )
         if len(pos) < 100:
             return cls()
 
         counts = np.ones((3, 3, 7), dtype=np.float64) * 0.5  # Laplace smoothing
 
         for _, grp in pos.groupby("trip_id", sort=False):
+            p_idx_arr = grp["point_idx"].to_numpy()
             t_arr = grp["time"].to_numpy()
             arc_arr = grp["arc_id"].to_numpy()
             u_arr = grp["arc_from"].to_numpy()
@@ -243,6 +251,8 @@ class EmpiricalPriors:
                 node_next.setdefault(int(u), set()).add(int(v))
 
             for i in range(1, len(t_arr)):
+                if int(p_idx_arr[i] - p_idx_arr[i - 1]) != 1:
+                    continue
                 dt = float(t_arr[i] - t_arr[i - 1])
                 if dt <= 0 or dt >= 30.0:
                     continue
