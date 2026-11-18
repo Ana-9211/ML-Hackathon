@@ -1,8 +1,3 @@
-PathSnap M4 — Local Automated Verification
-Date: 2026-11-18
-Scope: API / UI integration contracts with synthetic fixtures only.
-NOT a real evaluator benchmark or ML accuracy report.
-
-...........                                                              [100%]
-11 passed in 1.11s
-JavaScript syntax check passed.
+PathSnap M4: automated verification
+Date: 2026-11-18 | scikit-learn 1.7.2
+12 passed in 1.67s

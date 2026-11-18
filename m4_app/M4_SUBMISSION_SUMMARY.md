@@ -1,27 +1,19 @@
-# PathSnap — M4 Milestone Submission Summary
+# M4 summary
 
-**Submission folder:** `m4_app/`
+**Scope:** FastAPI backend (Laptop 1), Leaflet evaluator UI (Laptop 2), server-side scoring, request logging and
+two-laptop deployment scripts.
 
-**Milestone:** M4 — API, UI and two-laptop demonstration
+**Prediction pipeline:** the API calls `m3_hmm.inference:predict_trip`, which builds M1's candidate features,
+scores candidates with M2's tuned Gradient Boosting and decodes the route with M3's HMM/Viterbi. It returns one
+arc ID per GPS observation.
 
-**Implemented:**
+**Scoring:** after inference, the server aligns the reference route to the GPS observations and reports
+observation-level Top-1 accuracy, plus route similarity (Levenshtein) and reference coverage. The reference route
+never reaches the predictor, the UI or the logs.
 
-- FastAPI backend for trip discovery, health checks and route predictions (`backend/main.py`).
-- HTML/Leaflet evaluator interface, dynamically listing available trips and making real API requests (`frontend/`).
-- Input-only `.track`, `.nodes`, `.arcs` loading and M3 inference interface (`backend/dataset.py`, `backend/pipeline.py`).
-- Server-only `.route` loading and an explicitly defined route-sequence evaluation score (`backend/scoring.py`).
-- HTTP request logs on the API laptop, plus persistent JSONL logging (`logs/requests.jsonl`).
-- Windows PowerShell run scripts for both laptops (`scripts/`), dependencies, deployment instructions and automated tests.
+**Verification:**
+- `pytest` suite: 12 tests pass (see `TEST_RESULTS.txt`).
+- Running API on the 10 student-test trips: all 10 predictions succeed and the Top-1 per trip matches
+  `m3_hmm/outputs/per_trip_student_test_results.csv`.
 
-**Locally verified:** Automated M4 contract tests pass using synthetic inputs; HTTP requests to FastAPI and the independent UI web server return successful responses. The synthetic fixture is **not** real evaluator data or proof of ML performance.
-
-**Required before the real two-laptop assessment:**
-
-1. Put the 10 actual reserved evaluation trips on Laptop 1 only. Those files were not supplied with the materials shared in this conversation.
-2. Connect the actual independently trained M3 candidate classifier or team HMM/Viterbi predictor with identical training-time features and preprocessing. No trained M3 model was supplied.
-3. Perform the official real-data evaluator run with Laptop 1 API, Laptop 2 UI, visible incoming HTTP logs and screenshots.
-4. Upload this folder (with approved model artifacts and your team's remaining milestone code) to the required public GitHub repository. Do **not** include evaluator data, credentials or manufactured experimental results.
-
-**Scoring note:** The provided dataset guide describes `.route` as a sequential list of traversed road arc IDs, **not GPS-point labels**. Built-in scoring compares arc sequences via normalized edit distance. It must not be represented as GPS-point classification accuracy. Replace the scorer with a valid label alignment when the assessment provides one.
-
-**How to run:** See `README.md`, sections 3–4 and 9. For a synthetic integration smoke test, start Laptop 1 using `M4_MODE=demo` and Laptop 2 normally. For the actual evaluation, use `M4_MODE=trained` and the real M3/evaluator assets.
+**Run:** see `README.md` (Laptop 1 and Laptop 2 sections).
