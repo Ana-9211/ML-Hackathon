@@ -5,6 +5,7 @@ TRAINED mode requires a trusted joblib M3 classifier or an explicit team predict
 The matching functions only receive TripInput (no reference routes).
 """
 from __future__ import annotations
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from importlib import import_module
@@ -134,7 +135,16 @@ def _load_joblib_model(path: str):
 
 
 @lru_cache(maxsize=4)
+def _ensure_repo_root_importable() -> None:
+    """The team pipeline lives in sibling packages (m1_data, m2_models, m3_hmm) at the repo root."""
+    from .config import REPO_ROOT
+    root = str(REPO_ROOT)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+
+
 def _load_team_predictor(spec: str) -> Callable[[TripInput], list[int]]:
+    _ensure_repo_root_importable()
     try:
         module_name, function_name = spec.rsplit(":", 1)
         predictor = getattr(import_module(module_name), function_name)
@@ -247,12 +257,15 @@ def prediction_geometry(trip: TripInput, predicted_ids: list[int]) -> dict:
         i, j = trip.arcs[arc_id]
         a, b = trip.nodes[i], trip.nodes[j]
         segments.append({"arc_id": arc_id, "coordinates": [[a[1], a[0]], [b[1], b[0]]]})
-    connected = sum(old == new or trip.arcs[old][1] == trip.arcs[new][0]
-                    for old, new in zip(selected, selected[1:]))
-    denominator = max(1, len(selected) - 1)
+    # Point continuity (same definition as m3_hmm.metrics.compute_pointwise_continuity):
+    # share of consecutive GPS observations whose predicted arcs are the same arc or
+    # directly connected (arc_to of the first == arc_from of the second).
+    pairs = list(zip(predicted_ids, predicted_ids[1:]))
+    connected = sum(old == new or trip.arcs[old][1] == trip.arcs[new][0] for old, new in pairs)
     return {
         "arc_ids_per_observation": predicted_ids,
         "ordered_arcs": selected,
         "segments": segments,
-        "continuity_percent": round(100 * connected / denominator, 2) if len(selected) > 1 else 100.0,
+        "continuity_percent": round(100 * connected / len(pairs), 2) if pairs else 100.0,
+        "continuity_definition": "Share of consecutive GPS observations on the same or a directly connected road",
     }
