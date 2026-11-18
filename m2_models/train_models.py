@@ -1,11 +1,15 @@
 """
 m2_models.train_models
 ~~~~~~~~~~~~~~~~~~~~~~
-Trains all 6 candidate classification models on the full 80 training trips
+Trains candidate classification models on the full 80 training trips
 (filtered by label_reliable == 1) and exports trained model artifacts (.pkl)
-along with any fitted preprocessing scalers to `m2_models/models/`.
+along with the fitted preprocessing scaler to `m2_models/models/`.
+
+Supports `--models` (e.g. `python -m m2_models.train_models --models svm`)
+to retrain specific models without overwriting existing artifacts.
 """
 
+import argparse
 import time
 import logging
 from pathlib import Path
@@ -69,11 +73,10 @@ def get_model_specs():
                 C=1.0,
                 kernel="rbf",
                 probability=True,
-                max_iter=4000,  # Bound iterations to train quickly without hanging CPU
                 random_state=42,
             ),
             "needs_scaling": True,
-            "subsample_for_fit": 60000,
+            "subsample_for_fit": 50000,
         },
         "gradient_boosting": {
             "name": "Gradient Boosting",
@@ -101,6 +104,7 @@ def get_model_specs():
 def train_and_save_all(
     data_path: str = "m2_models/data/features_train.parquet",
     output_dir: str = "m2_models/models",
+    selected_models: list[str] | None = None,
 ):
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -112,14 +116,24 @@ def train_and_save_all(
     X = df[FEATURE_COLUMNS]
     y = df["label"].to_numpy()
 
-    # Fit a standard scaler for models that need feature scaling
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
     scaler_path = output_path / "scaler.pkl"
-    joblib.dump(scaler, scaler_path)
-    logging.info(f"Fitted and saved global feature scaler to {scaler_path}")
+    if selected_models and scaler_path.is_file():
+        scaler = joblib.load(scaler_path)
+        X_scaled = scaler.transform(X)
+        logging.info(f"Loaded existing feature scaler from {scaler_path}")
+    else:
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        joblib.dump(scaler, scaler_path, compress=3)
+        logging.info(f"Fitted and saved global feature scaler to {scaler_path}")
 
     specs = get_model_specs()
+    if selected_models:
+        unknown = [m for m in selected_models if m not in specs]
+        if unknown:
+            raise ValueError(f"Unknown model key(s): {unknown}. Available: {list(specs.keys())}")
+        specs = {k: specs[k] for k in selected_models}
+
     training_summary = {}
 
     for key, spec in specs.items():
@@ -142,13 +156,21 @@ def train_and_save_all(
         train_time = time.time() - t0
 
         model_file = output_path / f"{key}.pkl"
-        joblib.dump(model, model_file)
+        joblib.dump(model, model_file, compress=3)
         training_summary[name] = {"train_time_sec": train_time, "saved_path": str(model_file)}
         logging.info(f"Trained {name} in {train_time:.2f}s and saved to {model_file}")
 
-    logging.info("\nAll 6 models successfully trained and exported!")
+    logging.info("\nSelected models successfully trained and exported!")
     return training_summary
 
 
 if __name__ == "__main__":
-    train_and_save_all()
+    parser = argparse.ArgumentParser(description="Train M2 candidate classifiers.")
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=None,
+        help="Optional subset of model keys to train (e.g. --models svm).",
+    )
+    args = parser.parse_args()
+    train_and_save_all(selected_models=args.models)
