@@ -6,7 +6,7 @@
   <title>PathSnap | Route Reconstruction Console</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRcPKvZoUy4G6BTVwZfJ6h8c=" crossorigin="">
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -63,7 +63,7 @@
         <div class="info-box" id="statusMessage" role="status" aria-live="polite">Enter the API address and connect to begin.</div>
         <div class="info-footer">
           <span id="predictorLabel">Model: not loaded</span>
-          <span>*Sequence edit-similarity against the reference route, not per-GPS-point classification accuracy.</span>
+          <span>Top-1 = share of GPS points on the correct road; route similarity = ordered-route edit similarity vs the reference.</span>
         </div>
       </main>
     </div>
