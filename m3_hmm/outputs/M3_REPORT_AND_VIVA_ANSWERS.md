@@ -97,10 +97,10 @@ Between candidate $a_i = (u_i \to v_i)$ at step $t-1$ and candidate $a_j = (u_j 
 | `00000076` | 1,486 | 1,486 | 91 | 13 | **+78** | 91.12% | **96.37%** | 65.06% | **98.95%** |
 | `00000077` | 3,911 | 3,911 | 578 | 207 | **+371** | 74.38% | **83.87%** | 74.69% | **100.00%** |
 | `00000091` | 874 | 874 | 62 | 19 | **+43** | 88.10% | **93.02%** | 67.66% | **97.99%** |
-| **Total / Mean** | **19,160** | **19,133** | **1,311** | **383** | **+928** | **88.18%** | **93.13%** | **75.05%** | **99.49%** |
+| **Total / Mean** | **19,160** | **19,133** | **1,331** | **383** | **+948** | **88.18%** | **93.13%** | **75.05%** | **99.49%** |
 
 #### Discussion of Improvements and Cases Where HMM Did Not Help
-- **Improvements:** Across `student_test`, `HMM Ensemble (3-Transition Soft Average)` raised All-Point Top-1 Accuracy from **88.18% to 93.13%** (**88.31% to 93.26%** weighted reliable Top-1, **89.66% to 94.00%** trip mean), Reconstructed Route Continuity from **75.05% to 99.49%**, and Levenshtein sequence similarity from **59.39% to 93.38%**. It fixed **1,311** classifier errors against **383** points hurt (**+928** net gain).
+- **Improvements:** Across `student_test`, `HMM Ensemble (3-Transition Soft Average)` raised All-Point Top-1 Accuracy from **88.18% to 93.13%** (**88.31% to 93.26%** weighted reliable Top-1, **89.66% to 94.00%** trip mean), Reconstructed Route Continuity from **75.05% to 99.49%**, and Levenshtein sequence similarity from **59.39% to 93.38%**. It fixed **1,331** classifier errors against **383** points hurt (**+948** net gain).
 - **Where HMM Did Not Help:**
   1. **Intersection turn lag and complex urban junctions (`00000077` and `00000056`):** Out of `383` total points hurt by HMM across the 10 trips, `207` occurred on trip `00000077` (lowest final accuracy at `83.87%`, with `424` points wrong in both classifier and HMM) and `67` on trip `00000056`. When GPS observations exhibit sustained multi-second drift across dense intersections, transition smoothing can carry an incorrect branch assignment across adjacent fixes or shift the exact turn timestamp by 1–2 seconds.
   2. **Parallel connected roads (`00000065` at 88.28% and `00000009` at 90.85%):** Trip `00000065` (`12` hurt, `78` wrong in both) and trip `00000009` (`22` hurt, `74` wrong in both) contain parallel connected streets within the 50m candidate window where both paths are topologically connected and kinematically plausible.
