@@ -25,6 +25,7 @@ from m2_models.utils import (
     FEATURE_COLUMNS,
     load_dataset,
     compute_all_metrics,
+    compute_point_continuity,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -36,6 +37,7 @@ MODELS_TO_EVALUATE = [
     ("Support Vector Machine", "svm.pkl", True),
     ("Gradient Boosting", "gradient_boosting.pkl", False),
     ("MLP Classifier", "mlp.pkl", True),
+    ("Tuned Gradient Boosting (Optuna)", "tuned_gradient_boosting.pkl", False),
 ]
 
 
@@ -93,6 +95,7 @@ def evaluate_student_test(
             "recall": metrics["recall"],
             "candidate_accuracy": metrics["accuracy"],
             "log_loss": metrics["log_loss"],
+            "route_continuity": compute_point_continuity(df_test, pred_probs),
             "inference_time_sec": infer_time_sec,
             "latency_ms_per_1k_cand": latency_per_1k_ms,
         }
