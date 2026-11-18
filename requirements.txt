@@ -1,0 +1,15 @@
+# PathSnap: shared requirements for m1_data, m2_models and m3_hmm (and m4_app via m4_app/requirements.txt).
+# Install from the repository root:  pip install -r requirements.txt
+#
+# scikit-learn is pinned EXACTLY: every saved model in m2_models/models/ was trained with 1.7.2,
+# and the Gradient Boosting pickles do not load on other versions.
+scikit-learn==1.7.2
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+pyarrow>=14
+joblib>=1.3
+optuna>=3.6
+matplotlib>=3.8
+seaborn>=0.13
+folium>=0.15
