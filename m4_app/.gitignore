@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv/
+.env
+logs/*
+!logs/.gitkeep
+private_evaluator/*
+!private_evaluator/.gitkeep
+# Store only independently trained and approved model artifacts in artifacts/.
