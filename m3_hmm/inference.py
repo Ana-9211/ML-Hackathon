@@ -3,8 +3,9 @@ m3_hmm.inference
 ~~~~~~~~~~~~~~~~
 Live inference adapter for M4's FastAPI backend (`M4_TEAM_PREDICTOR="m3_hmm.inference:predict_trip"`).
 
-Directly uses M1's feature builder + M2's official `.pkl` models (`m2_models/models/`) +
-M3's tuned 3-Technique Transition Ensemble HMM (`m3_hmm/artifacts/hmm_config.json`).
+Uses M1's feature builder + M2's final selected classifier (`tuned_gradient_boosting.pkl`,
+raw features, no scaling) + M3's tuned 3-Technique Transition Ensemble HMM
+(`use_emission_ensemble=False`).
 Never accesses or accepts `.route` ground-truth files.
 Returns `list[int]`: exactly one predicted `arc_id` per GPS observation.
 """
@@ -14,20 +15,20 @@ from functools import lru_cache
 import numpy as np
 
 from m1_data.loader import Trip
-from m1_data.features import build_trip_table
+from m1_data.features import build_trip_table, FEATURE_COLUMNS
 from m1_data.network import RoadNetwork
 
 from .transitions import TripGraph, HMMParams, EmpiricalPriors
 from .viterbi import viterbi_decode
-from .model_bridge import M3_ARTIFACTS_DIR, load_m2_models, predict_m2_probabilities_on_df
+from .model_bridge import M3_ARTIFACTS_DIR, load_tuned_gb_model
 
 
 @lru_cache(maxsize=1)
-def _load_inference_assets() -> tuple[dict, HMMParams, EmpiricalPriors]:
+def _load_inference_assets() -> tuple[object, HMMParams, EmpiricalPriors]:
     params = HMMParams.load(M3_ARTIFACTS_DIR / "hmm_config.json")
     priors = EmpiricalPriors.load(M3_ARTIFACTS_DIR / "empirical_priors.npy")
-    m2_bundle = load_m2_models()
-    return m2_bundle, params, priors
+    tuned_gb = load_tuned_gb_model()
+    return tuned_gb, params, priors
 
 
 def _coerce_to_m1_trip(trip_obj) -> Trip:
@@ -53,7 +54,7 @@ def _coerce_to_m1_trip(trip_obj) -> Trip:
 def predict_trip(trip_input) -> list[int]:
     """
     Entry point for M4 (`M4_TEAM_PREDICTOR="m3_hmm.inference:predict_trip"`).
-    Runs M1 feature extraction -> M2 official .pkl models -> M3 3-Technique Ensemble Viterbi.
+    Runs M1 feature extraction -> M2 tuned_gradient_boosting.pkl -> M3 3-Technique Ensemble Viterbi.
     Returns one 0-based `arc_id` for each GPS observation in `trip_input`.
     """
     m1_trip = _coerce_to_m1_trip(trip_input)
@@ -62,8 +63,10 @@ def predict_trip(trip_input) -> list[int]:
         return []
 
     df_cand, _ = build_trip_table(m1_trip, route=None)
-    m2_bundle, params, priors = _load_inference_assets()
-    df_cand = predict_m2_probabilities_on_df(df_cand, m2_bundle)
+    tuned_gb, params, priors = _load_inference_assets()
+
+    X_raw = df_cand[FEATURE_COLUMNS].to_numpy(dtype=np.float64)
+    df_cand["predicted_probability"] = tuned_gb.predict_proba(X_raw)[:, 1].astype(np.float32)
 
     net = RoadNetwork(m1_trip)
     px, py = net.proj.to_xy(m1_trip.lon, m1_trip.lat)
@@ -75,7 +78,7 @@ def predict_trip(trip_input) -> list[int]:
         params=params,
         priors=priors,
         mode="ensemble",
-        use_emission_ensemble=True,
+        use_emission_ensemble=False,
         gps_xy=(px, py),
     )
 

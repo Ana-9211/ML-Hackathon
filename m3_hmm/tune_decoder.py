@@ -110,7 +110,7 @@ def run_decoder_tuning(n_trials: int = 40, val_trip_limit: int = 20) -> HMMParam
 
         for item in cached_trips:
             pred_arcs, _ = viterbi_from_precomputed(
-                item["steps"], item["trans_list"], trial_params, mode="ensemble", use_emission_ensemble=True
+                item["steps"], item["trans_list"], trial_params, mode="ensemble", use_emission_ensemble=False
             )
             rel = item["rel_mask"]
             top1 = float(np.mean(pred_arcs[rel] == item["label_arcs"][rel])) if rel.any() else float(np.mean(pred_arcs == item["label_arcs"]))
