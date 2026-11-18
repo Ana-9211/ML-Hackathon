@@ -43,8 +43,12 @@ def _merge_arcs(net: RoadNetwork, arcs) -> list[list[tuple[float, float]]]:
 
 
 def trip_map(trip, net: RoadNetwork, network_radius_m: float = 80.0, max_gps_points: int = 3000,
-             tiles: str = "OpenStreetMap") -> folium.Map:
-    """Map with GPS points and the road arcs near the trajectory."""
+             tiles: str = "OpenStreetMap", routes=None) -> folium.Map:
+    """Map with GPS points and the road arcs near the trajectory.
+
+    `routes` = list of (arc_ids, layer_name, colour). They are drawn BELOW the
+    GPS points so the observed trajectory stays visible on top of the routes.
+    """
     m = folium.Map(tiles=tiles, control_scale=True)
     m.fit_bounds([[trip.lat.min(), trip.lon.min()], [trip.lat.max(), trip.lon.max()]])
 
@@ -56,11 +60,14 @@ def trip_map(trip, net: RoadNetwork, network_radius_m: float = 80.0, max_gps_poi
         folium.PolyLine(net.arc_lonlat(a), color=LAYER_STYLE["network"], weight=2, opacity=0.6).add_to(roads)
     roads.add_to(m)
 
+    for arcs, name, color in routes or []:
+        add_route(m, net, arcs, name, color, weight=6)
+
     gstep = max(1, int(np.ceil(len(px) / max_gps_points)))
     gps = folium.FeatureGroup(name=f"GPS observations (every {gstep}. point)" if gstep > 1 else "GPS observations")
     for i in range(0, len(px), gstep):
-        folium.CircleMarker((trip.lat[i], trip.lon[i]), radius=2, color=LAYER_STYLE["gps"], fill=True,
-                            fill_opacity=0.8, weight=0, tooltip=f"#{i}  t={trip.t[i]:.0f}s").add_to(gps)
+        folium.CircleMarker((trip.lat[i], trip.lon[i]), radius=3, color="white", fill=True,
+                            fill_color=LAYER_STYLE["gps"], fill_opacity=0.9, weight=0.5, tooltip=f"#{i}  t={trip.t[i]:.0f}s").add_to(gps)
     gps.add_to(m)
     folium.Marker((trip.lat[0], trip.lon[0]), tooltip="Start", icon=folium.Icon(color="green", icon="play")).add_to(m)
     folium.Marker((trip.lat[-1], trip.lon[-1]), tooltip="End", icon=folium.Icon(color="red", icon="stop")).add_to(m)
@@ -71,7 +78,7 @@ def add_route(m: folium.Map, net: RoadNetwork, arcs, name: str, color: str, weig
               dash: str | None = None) -> None:
     layer = folium.FeatureGroup(name=name)
     for line in _merge_arcs(net, arcs):
-        folium.PolyLine(line, color=color, weight=weight, opacity=0.85, dash_array=dash, tooltip=name).add_to(layer)
+        folium.PolyLine(line, color=color, weight=weight, opacity=0.6, dash_array=dash, tooltip=name).add_to(layer)
     layer.add_to(m)
 
 
