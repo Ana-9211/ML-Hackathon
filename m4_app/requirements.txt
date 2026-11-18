@@ -1,6 +1,5 @@
+# Laptop 1 (API). Install from the repository root:  pip install -r m4_app/requirements.txt
+# The prediction pipeline (m1_data, m2_models, m3_hmm) uses the shared, pinned project requirements.
+-r ../requirements.txt
 fastapi>=0.115,<1.0
 uvicorn>=0.30,<1.0
-numpy>=1.26,<3.0
-scipy>=1.13,<2.0
-joblib>=1.3,<2.0
-scikit-learn>=1.4,<2.0
