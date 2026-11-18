@@ -47,7 +47,7 @@ def create_trip_comparison_map(
 
     decoded = decode_trip_all_methods(df_trip, graph, params, priors, gps_xy=(px, py))
     clf_res = decoded["Classifier-Only (No HMM)"]
-    hmm_res = decoded["HMM Full Ensemble (3-Transition + 3-Classifier)"]
+    hmm_res = decoded["HMM Ensemble (3-Transition Soft Average)"]
 
     routes = []
     if ref_route is not None:

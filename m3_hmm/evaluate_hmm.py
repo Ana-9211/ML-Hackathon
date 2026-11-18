@@ -153,14 +153,14 @@ def run_evaluation() -> tuple[pd.DataFrame, pd.DataFrame]:
         true_arcs = df_pts["label_arc"].to_numpy(dtype=np.int64)
         rel_mask = df_pts["label_reliable"].to_numpy(dtype=np.int8) == 1
         clf_arcs = decoded_dict["Classifier-Only (No HMM)"]["point_arcs"]
-        hmm_arcs = decoded_dict["HMM Full Ensemble (3-Transition + 3-Classifier)"]["point_arcs"]
+        hmm_arcs = decoded_dict["HMM Ensemble (3-Transition Soft Average)"]["point_arcs"]
 
         clf_ok = clf_arcs == true_arcs
         hmm_ok = hmm_arcs == true_arcs
 
         sub_t = df_per_trip[df_per_trip["trip_id"] == str(tid)]
         clf_cont = float(sub_t[sub_t["method"] == "Classifier-Only (No HMM)"]["route_continuity"].iloc[0])
-        hmm_cont = float(sub_t[sub_t["method"] == "HMM Full Ensemble (3-Transition + 3-Classifier)"]["route_continuity"].iloc[0])
+        hmm_cont = float(sub_t[sub_t["method"] == "HMM Ensemble (3-Transition Soft Average)"]["route_continuity"].iloc[0])
 
         fixed_by_hmm = int((~clf_ok & hmm_ok & rel_mask).sum())
         hurt_by_hmm = int((clf_ok & ~hmm_ok & rel_mask).sum())
