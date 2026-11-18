@@ -1,0 +1,11 @@
+# Raw dataset is not committed (see m1_data/README.md for where to place it)
+data/*
+!data/README.md
+
+# Large regenerated tables
+m1_data/outputs/features/
+
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
