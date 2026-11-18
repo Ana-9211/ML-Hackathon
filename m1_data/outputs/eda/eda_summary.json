@@ -1,0 +1,28 @@
+{
+  "trips": {
+    "student_test": 10,
+    "train": 80
+  },
+  "gps_points": {
+    "student_test": 19160,
+    "train": 208417
+  },
+  "all_files_present": true,
+  "invalid_or_duplicate_gps_rows": 0,
+  "share_dt_exactly_1s": 0.9667981027487285,
+  "trips_with_gaps_over_10s": 42,
+  "max_gap_s": 153064.0,
+  "network_arcs_min_median_max": [
+    649,
+    18761,
+    307392
+  ],
+  "two_way_share_median": 0.9511203120769942,
+  "isolated_nodes_total": 0,
+  "routes_with_breaks": 11,
+  "train_candidate_miss_rate": 0.07206037880972982,
+  "train_candidate_miss_rate_reliable_only": 0.006001824295514324,
+  "train_unreliable_label_share": 0.10933083357369489,
+  "train_mean_candidates_per_point": 7.473579463513124,
+  "train_positive_rate_rows": 0.12416267542488554
+}
