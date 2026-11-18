@@ -198,8 +198,7 @@ def folium_maps(summary: pd.DataFrame):
     for part, tid in MAP_TRIPS:
         trip = load_trip(part, tid)
         net = RoadNetwork(trip)
-        m = maps.trip_map(trip, net)
-        maps.add_route(m, net, load_route(part, tid), "Reference route", maps.LAYER_STYLE["reference"])
+        m = maps.trip_map(trip, net, routes=[(load_route(part, tid), "Reference route", maps.LAYER_STYLE["reference"])])
         maps.add_legend(m, [("GPS observations", maps.LAYER_STYLE["gps"]),
                             ("Road network", maps.LAYER_STYLE["network"]),
                             ("Reference route", maps.LAYER_STYLE["reference"])], f"Trip {tid} ({part})")
