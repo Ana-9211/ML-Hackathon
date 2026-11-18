@@ -8,16 +8,9 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-import sys
-import warnings
 import joblib
 import numpy as np
 import pandas as pd
-import sklearn._loss._loss as _sk_loss
-
-# Cross-version scikit-learn pickle compatibility (1.7.x <-> 1.9.x)
-sys.modules.setdefault("_loss", _sk_loss)
-warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 from sklearn.ensemble import (
     RandomForestClassifier,
     HistGradientBoostingClassifier,
