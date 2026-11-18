@@ -95,8 +95,8 @@ def _as_index(value: float, max_count: int) -> int:
     return int(value)
 
 
-def load_trip(folder: Path, trip_id: str, max_observations: int = 20000,
-              max_arcs: int = 200000) -> TripInput:
+def load_trip(folder: Path, trip_id: str, max_observations: int = 50000,
+              max_arcs: int = 1000000) -> TripInput:
     safe_trip_id(trip_id)
     prefix = find_trip_prefix(folder, trip_id)
     if prefix is None:
