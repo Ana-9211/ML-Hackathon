@@ -103,3 +103,27 @@ def compute_all_metrics(
         "top1_accuracy": float(top1),
         "confusion_matrix": cm,
     }
+
+
+def compute_point_continuity(df_eval: pd.DataFrame, pred_probs: np.ndarray) -> float:
+    """
+    Route continuity of classifier-only predictions (no HMM):
+    for each trip, take each GPS point's highest-scoring candidate and compute the share of
+    consecutive points whose predicted arcs are the same arc or directly connected
+    (arc_to of the first == arc_from of the second). Returns the mean over trips.
+    Same definition as m3_hmm.metrics.compute_pointwise_continuity.
+    """
+    df_temp = df_eval[["trip_id", "point_idx", "arc_id", "arc_from", "arc_to"]].copy()
+    df_temp["score"] = pred_probs
+    top = df_temp.loc[df_temp.groupby(["trip_id", "point_idx"])["score"].idxmax()]
+    top = top.sort_values(["trip_id", "point_idx"])
+    values = []
+    for _, g in top.groupby("trip_id", sort=False):
+        arc = g["arc_id"].to_numpy()
+        a_from = g["arc_from"].to_numpy()
+        a_to = g["arc_to"].to_numpy()
+        if len(arc) < 2:
+            continue
+        ok = (arc[:-1] == arc[1:]) | (a_to[:-1] == a_from[1:])
+        values.append(float(ok.mean()))
+    return float(np.mean(values)) if values else float("nan")
