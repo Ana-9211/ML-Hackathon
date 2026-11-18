@@ -130,10 +130,10 @@ def run_optuna_study(
     train_time = time.time() - t0
 
     model_out = models_path / "tuned_gradient_boosting.pkl"
-    joblib.dump(tuned_model, model_out)
+    joblib.dump(tuned_model, model_out, compress=3)
     logging.info(f"Exported tuned model to {model_out} (training time: {train_time:.2f}s)")
 
-    # 4. Evaluate on Student Test
+    # 4. Evaluate on Student Test (student_test_results.csv is generated centrally by evaluate_models.py)
     logging.info(f"Evaluating tuned model on Student Test ({test_path})...")
     df_test = load_dataset(test_path, filter_reliable=False)
     X_test = df_test[FEATURE_COLUMNS].to_numpy()
@@ -152,28 +152,6 @@ def run_optuna_study(
         f"Candidate Acc:  {test_metrics['accuracy']:.4f}\n"
         f"Inference Latency: {(inf_time / len(X_test)) * 1e6:.2f} ms/1k cands"
     )
-
-    # Append tuned results to student_test_results.csv
-    test_res_file = results_path / "student_test_results.csv"
-    if test_res_file.exists():
-        df_existing = pd.read_csv(test_res_file)
-        new_row = {
-            "model": "Tuned Gradient Boosting (Optuna)",
-            "top1_accuracy": test_metrics["top1_accuracy"],
-            "macro_f1": test_metrics["macro_f1"],
-            "precision": test_metrics["precision"],
-            "recall": test_metrics["recall"],
-            "candidate_accuracy": test_metrics["accuracy"],
-            "log_loss": test_metrics["log_loss"],
-            "inference_time_sec": inf_time,
-            "latency_ms_per_1k_cand": (inf_time / len(X_test)) * 1e6,
-        }
-        # Replace if exists, else append
-        df_existing = df_existing[df_existing["model"] != "Tuned Gradient Boosting (Optuna)"]
-        df_updated = pd.concat([df_existing, pd.DataFrame([new_row])], ignore_index=True)
-        df_updated = df_updated.sort_values(by="top1_accuracy", ascending=False)
-        df_updated.to_csv(test_res_file, index=False)
-        logging.info(f"Updated {test_res_file} with tuned model benchmark.")
 
     return best_params_record
 

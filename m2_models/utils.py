@@ -105,6 +105,15 @@ def compute_all_metrics(
     }
 
 
+def compute_candidate_miss_rate(df_eval: pd.DataFrame) -> float:
+    """
+    Share of GPS observations whose aligned ground-truth arc is absent from their
+    generated candidate set (i.e., max(label) == 0 for that (trip_id, point_idx)).
+    """
+    has_hit = df_eval.groupby(["trip_id", "point_idx"], sort=False)["label"].max()
+    return float(1.0 - has_hit.mean())
+
+
 def compute_point_continuity(df_eval: pd.DataFrame, pred_probs: np.ndarray) -> float:
     """
     Route continuity of classifier-only predictions (no HMM):
