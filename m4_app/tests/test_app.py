@@ -82,7 +82,30 @@ def test_score_respects_order_and_no_pointwise_claim():
     bad = score_prediction([2, 1, 0], [0, 1, 2])
     assert good['route_accuracy_percent'] == 100.0
     assert bad['route_accuracy_percent'] < good['route_accuracy_percent']
-    assert 'NOT GPS-observation' in good['metric_note']
+    assert 'top1_accuracy_percent' not in good  # no per-point claim without the trip geometry
+
+
+def test_observation_top1_uses_aligned_reference_server_side():
+    from backend.dataset import load_trip
+    from backend.scoring import load_reference_private
+    trip = load_trip(ROOT / 'demo_data', 'demo_01')
+    reference = load_reference_private(ROOT / 'demo_data', 'demo_01', len(trip.arcs))
+    # Predicting the aligned reference arc for every point must score 100 %.
+    import numpy as np, sys
+    sys.path.insert(0, str(ROOT.parent))
+    from m1_data.labels import align_route
+    from m1_data.loader import Trip
+    from m1_data.network import RoadNetwork
+    m1 = Trip('demo_01', 'evaluator_test',
+              np.array([[o.lon, o.lat, o.timestamp] for o in trip.observations]),
+              np.asarray(trip.nodes, dtype=float), np.asarray(trip.arcs, dtype=np.int64))
+    net = RoadNetwork(m1)
+    px, py = net.proj.to_xy(m1.lon, m1.lat)
+    aligned, _, _ = align_route(net, px, py, np.asarray(reference))
+    perfect = score_prediction([int(a) for a in aligned], reference, trip)
+    assert perfect['top1_accuracy_percent'] == 100.0
+    wrong = [int((a + 1) % len(trip.arcs)) for a in aligned]
+    assert score_prediction(wrong, reference, trip)['top1_accuracy_percent'] < 100.0
 
 
 def test_all_ten_trip_ids_can_be_served_when_dataset_exists(tmp_path):
