@@ -77,10 +77,8 @@ def predict_m2_probabilities_on_df(df: pd.DataFrame, m2_bundle: dict | None = No
     df["prob_hgb"] = p_hgb
     df["prob_rf"] = p_rf
     df["prob_mlp"] = p_mlp
-    # Keep compatibility alias prob_et -> prob_mlp for 3-classifier ensemble
-    df["prob_et"] = p_mlp
 
-    # Primary single-model emission: Gradient Boosting (highest F1 + Top-1 balance in M2)
+    # Primary single-model emission: Tuned Gradient Boosting
     df["predicted_probability"] = p_hgb
     df["predicted_label"] = (p_hgb >= 0.5).astype(np.int8)
     return df
@@ -147,7 +145,6 @@ def ensure_predictions_and_models(force_recompute: bool = False) -> tuple[pd.Dat
     df_train["prob_hgb"] = oof_hgb
     df_train["prob_rf"] = oof_rf
     df_train["prob_mlp"] = oof_mlp
-    df_train["prob_et"] = oof_mlp
     df_train["predicted_probability"] = oof_hgb
     df_train["predicted_label"] = (oof_hgb >= 0.5).astype(np.int8)
 
@@ -156,7 +153,7 @@ def ensure_predictions_and_models(force_recompute: bool = False) -> tuple[pd.Dat
         "trip_id", "point_idx", "time", "arc_id", "arc_from", "arc_to",
         "proj_t", "dist", "dist_rank", "speed", "arc_len", "fallback",
         "label", "label_arc", "label_reliable",
-        "prob_hgb", "prob_rf", "prob_mlp", "prob_et",
+        "prob_hgb", "prob_rf", "prob_mlp",
         "predicted_probability", "predicted_label",
     ]
     df_val = df_train[keep_cols].copy()

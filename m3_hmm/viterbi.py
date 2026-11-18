@@ -28,7 +28,7 @@ def prepare_trip_steps(df_trip: pd.DataFrame) -> list[dict]:
     df_sorted = df_trip.sort_values(["point_idx", "dist_rank" if "dist_rank" in df_trip.columns else "arc_id"], kind="stable")
     steps: list[dict] = []
 
-    has_prob_ens = all(c in df_sorted.columns for c in ("prob_rf", "prob_hgb", "prob_et"))
+    has_prob_ens = all(c in df_sorted.columns for c in ("prob_rf", "prob_hgb", "prob_mlp"))
     for pid, grp in df_sorted.groupby("point_idx", sort=False):
         arcs = grp["arc_id"].to_numpy(dtype=np.int64)
         proj_t = grp["proj_t"].to_numpy(dtype=np.float64)
@@ -46,7 +46,7 @@ def prepare_trip_steps(df_trip: pd.DataFrame) -> list[dict]:
             (
                 0.40 * grp["prob_rf"].to_numpy(dtype=np.float64)
                 + 0.40 * grp["prob_hgb"].to_numpy(dtype=np.float64)
-                + 0.20 * grp["prob_et"].to_numpy(dtype=np.float64)
+                + 0.20 * grp["prob_mlp"].to_numpy(dtype=np.float64)
             )
             if has_prob_ens
             else probs
