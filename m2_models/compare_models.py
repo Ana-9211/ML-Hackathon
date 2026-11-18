@@ -13,7 +13,6 @@ for the M2 report and submission:
 import logging
 from pathlib import Path
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
 
