@@ -24,5 +24,25 @@
   "train_candidate_miss_rate_reliable_only": 0.006001824295514324,
   "train_unreliable_label_share": 0.10933083357369489,
   "train_mean_candidates_per_point": 7.473579463513124,
-  "train_positive_rate_rows": 0.12416267542488554
+  "train_positive_rate_rows": 0.12416267542488554,
+  "extent_ew_km_median": 6.7329876408569,
+  "extent_ns_km_median": 5.252021627130527,
+  "extent_km_max": 75.40427497844438,
+  "nearest_arc_top1_reliable": 0.5545480550742942,
+  "true_arc_is_tied_nearest_reliable": 0.8513630941779066,
+  "true_arc_two_way_share": 0.7000352944370537,
+  "speed_kmh_p10_p50_p90_p99": [
+    5.267412750651601,
+    25.576192715673614,
+    91.37729815186846,
+    150.5388699313962
+  ],
+  "near_stationary_share": 0.05287953081434477,
+  "heading_invalid_share": 0.02635323526583977,
+  "gaps_over_10s_total": 617,
+  "trips_full_route_in_largest_scc": 81,
+  "route_in_largest_scc_min": 0.4666666666666667,
+  "trips_with_step_over_200kmh": 23,
+  "projection_rel_error_max_pct": 0.16211938891753475,
+  "projection_rel_error_median_pct": 0.003206636025088787
 }
